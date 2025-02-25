@@ -62,6 +62,9 @@ kotlin {
 
             api(libs.datastore.preferences)
             api(libs.datastore)
+            api(libs.moko.permissions)
+            api(libs.moko.permissions.compose)
+            implementation(libs.lifecycle.viewmodel.compose)
         }
 
         nativeMain.dependencies {

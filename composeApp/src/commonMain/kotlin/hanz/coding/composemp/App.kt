@@ -4,14 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -21,26 +16,26 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import composemp.composeapp.generated.resources.Res
 import composemp.composeapp.generated.resources.hello_duong
 import composemp.composeapp.generated.resources.logo
+import dev.icerock.moko.permissions.PermissionState
+import dev.icerock.moko.permissions.compose.BindEffect
+import dev.icerock.moko.permissions.compose.rememberPermissionsControllerFactory
 import hanz.coding.composemp.dependencies.MyViewModel
 import hanz.coding.composemp.network.InsultCensorClient
+import hanz.coding.composemp.permission.PermissionsViewModel
 import hanz.coding.composemp.utils.NetworkError
-import hanz.coding.composemp.utils.onError
-import hanz.coding.composemp.utils.onSuccess
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -159,6 +154,38 @@ fun App(
                                 }
                             }) {
                                 Text("increment")
+                            }
+
+                            // Permission
+                            val factory = rememberPermissionsControllerFactory()
+                            val controller = remember(factory) {
+                                factory.createPermissionsController()
+                            }
+                            BindEffect(controller)
+                            val viewmodel = viewModel {
+                                PermissionsViewModel(controller)
+                            }
+                            when (viewmodel.state) {
+                                PermissionState.Granted -> {
+                                    Text("Record  audio permissinon granted")
+                                }
+
+                                PermissionState.DeniedAlways -> {
+                                    Text("Permission was denied")
+                                    Button(
+                                        onClick = { controller.openAppSettings() }
+                                    ) {
+                                        Text("Openapp setting")
+                                    }
+                                }
+
+                                else -> {
+                                    Button(onClick = {
+                                        viewmodel.provideOrRequestRecordAudioPermission()
+                                    }) {
+                                        Text("Request permission")
+                                    }
+                                }
                             }
                         }
                     }
