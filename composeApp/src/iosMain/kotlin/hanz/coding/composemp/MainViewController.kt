@@ -2,6 +2,7 @@ package hanz.coding.composemp
 
 import androidx.compose.runtime.remember
 import androidx.compose.ui.window.ComposeUIViewController
+import hanz.coding.composemp.datastore.createDataStore
 import hanz.coding.composemp.di.initKoin
 import hanz.coding.composemp.network.InsultCensorClient
 import hanz.coding.composemp.network.createHttpClient
@@ -13,6 +14,9 @@ fun MainViewController() = ComposeUIViewController(
     }
 ) {
     App(
+        prefs = remember {
+            createDataStore()
+        },
         client = remember {
             InsultCensorClient(createHttpClient(Darwin.create()))
         },

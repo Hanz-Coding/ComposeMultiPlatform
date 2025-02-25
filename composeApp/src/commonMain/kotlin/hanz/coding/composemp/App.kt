@@ -13,6 +13,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,7 +22,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -33,6 +40,8 @@ import hanz.coding.composemp.network.InsultCensorClient
 import hanz.coding.composemp.utils.NetworkError
 import hanz.coding.composemp.utils.onError
 import hanz.coding.composemp.utils.onSuccess
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -45,6 +54,7 @@ import org.koin.core.annotation.KoinExperimentalAPI
 @Composable
 @Preview
 fun App(
+    prefs: DataStore<Preferences>,
     client: InsultCensorClient,
     batteryManager: BatteryManager
 ) {
@@ -85,46 +95,70 @@ fun App(
 
                             //censor
 
-                            TextField(
-                                value = uncensorText,
-                                onValueChange = { uncensorText = it },
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                                    .fillMaxWidth(),
-                                placeholder = {
-                                    Text("Uncensored text")
-                                }
+//                            TextField(
+//                                value = uncensorText,
+//                                onValueChange = { uncensorText = it },
+//                                modifier = Modifier.padding(horizontal = 16.dp)
+//                                    .fillMaxWidth(),
+//                                placeholder = {
+//                                    Text("Uncensored text")
+//                                }
+//                            )
+//                            Button(onClick = {
+//                                scope.launch {
+//                                    isLoading = true
+//                                    errorMessage = null
+//                                    client.censorWord(uncensorText)
+//                                        .onSuccess {
+//                                            censorText = it
+//                                        }
+//                                        .onError {
+//                                            errorMessage = it
+//                                        }
+//                                    isLoading = false
+//                                }
+//                            }) {
+//                                if (isLoading) {
+//                                    CircularProgressIndicator(
+//                                        modifier = Modifier.size(15.dp),
+//                                        strokeWidth = 1.dp,
+//                                        color = Color.White
+//                                    )
+//                                } else {
+//                                    Text("Censor")
+//                                }
+//                            }
+//
+//                            censorText?.let {
+//                                Text(it)
+//                            }
+//
+//                            errorMessage?.let {
+//                                Text(it.name)
+//                            }
+
+                            // end censor
+
+                            // Datasource
+                            val counterKey = intPreferencesKey("counter")
+                            val counter by prefs.data
+                                .map {
+                                    it[counterKey] ?: 0
+                                }.collectAsState(0)
+                            Text(
+                                text = counter.toString(),
+                                textAlign = TextAlign.Center,
+                                fontSize = 40.sp
                             )
                             Button(onClick = {
                                 scope.launch {
-                                    isLoading = true
-                                    errorMessage = null
-                                    client.censorWord(uncensorText)
-                                        .onSuccess {
-                                            censorText = it
-                                        }
-                                        .onError {
-                                            errorMessage = it
-                                        }
-                                    isLoading = false
+                                    prefs.edit { dataStore ->
+                                        val counterKey = intPreferencesKey("counter")
+                                        dataStore[counterKey] = counter + 1
+                                    }
                                 }
                             }) {
-                                if (isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(15.dp),
-                                        strokeWidth = 1.dp,
-                                        color = Color.White
-                                    )
-                                } else {
-                                    Text("Censor")
-                                }
-                            }
-
-                            censorText?.let {
-                                Text(it)
-                            }
-
-                            errorMessage?.let {
-                                Text(it.name)
+                                Text("increment")
                             }
                         }
                     }
